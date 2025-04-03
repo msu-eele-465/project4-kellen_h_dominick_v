@@ -294,3 +294,4 @@ __interrupt void EUSCI_B0_ISR(void)
     P1OUT &= ~BIT1;
     UCB0IFG &= ~UCRXIFG;
 }
+

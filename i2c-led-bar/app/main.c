@@ -1,22 +1,27 @@
-#include <msp430fr2310.h>
-#include <stdbool.h>
+#include "intrinsics.h"
+#include "msp430fr2310.h"
+#include <msp430.h>
 
-int main(void)
-{
-    // Stop watchdog timer
-    WDTCTL = WDTPW | WDTHOLD;
+#define SLAVE_ADDRESS 0x46
+volatile unsigned char data[3] = {10,4,10};
+int index = 0;
+int pattern_num = -1;
+int base_transition_period = 8;
+int button_pressed = 0;
+int button_pressed_prev = -1;
+int step = 0;
+int i = 0;
+int pattern[8] = {0,0,0,0,0,0,0,0};
+int pattern_zero_arr[8] = {1, 0, 1, 0, 1, 0, 1, 0};
+int pattern_one_arr[8];
+int pattern_two_arr[8];
+int pattern_three_arr[8];
+int prev_patterns[3] = {0, 0, 0};
 
-    P1OUT &= ~BIT0;
-    P1DIR |= BIT0;
+void LED_bar_setup(void);
+void set_pattern(int[]);
+void pattern_zero(int[]);
+void pattern_one(int, int[]);
+void pattern_two(int, int[]);
+void pattern_three(int, int[]);
 
-    // Disable low-power mode / GPIO high-impedance
-    PM5CTL0 &= ~LOCKLPM5;
-
-    while (true)
-    {
-        P1OUT ^= BIT0;
-
-        // Delay for 100000*(1/MCLK)=0.1s
-        __delay_cycles(100000);
-    }
-}

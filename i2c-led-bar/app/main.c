@@ -25,3 +25,35 @@ void pattern_one(int, int[]);
 void pattern_two(int, int[]);
 void pattern_three(int, int[]);
 
+int main(void)
+{
+    WDTCTL = WDTPW | WDTHOLD;  // Stop watchdog timer
+
+    UCB0CTLW0 |= UCSWRST;
+
+    P1SEL1 &= ~BIT3;
+    P1SEL0 |= BIT3;
+
+    P1SEL1 &= ~BIT2;
+    P1SEL0 |= BIT2;
+
+    UCB0CTLW0 &= ~UCTR;
+    UCB0CTLW0 &= ~UCMST;
+    UCB0CTLW0 |= UCMODE_3 | UCSYNC;
+
+    UCB0I2COA0 = SLAVE_ADDRESS | UCOAEN;
+    UCB0I2COA0 |= UCGCEN;
+
+    UCB0CTLW0 &= ~UCSWRST;
+
+    PM5CTL0 &= ~LOCKLPM5;
+
+    UCB0IE |= UCRXIE0;
+    __enable_interrupt();  // Enable global interrupts
+
+    P1DIR |= BIT1;
+    P1OUT &= ~BIT1;
+
+    LED_bar_setup();
+    set_pattern(pattern);
+}

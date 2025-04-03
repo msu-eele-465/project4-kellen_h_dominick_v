@@ -1,84 +1,933 @@
-/* --COPYRIGHT--,BSD_EX
- * Copyright (c) 2014, Texas Instruments Incorporated
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * *  Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * *  Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * *  Neither the name of Texas Instruments Incorporated nor the names of
- *    its contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- *******************************************************************************
- *
- *                       MSP430 CODE EXAMPLE DISCLAIMER
- *
- * MSP430 code examples are self-contained low-level programs that typically
- * demonstrate a single peripheral function or device feature in a highly
- * concise manner. For this the code may rely on the device's power-on default
- * register values and settings such as the clock configuration and care must
- * be taken when combining code from several examples to avoid potential side
- * effects. Also see www.ti.com/grace for a GUI- and www.ti.com/msp430ware
- * for an API functional library-approach to peripheral configuration.
- *
- * --/COPYRIGHT--*/
-//******************************************************************************
-//  MSP430FR231x Demo - Toggle P1.0 using software
-//
-//  Description: Toggle P1.0 every 0.1s using software.
-//  By default, FR231x select XT1 as FLL reference.
-//  If XT1 is present, the PxSEL(XIN & XOUT) needs to configure.
-//  If XT1 is absent, switch to select REFO as FLL reference automatically.
-//  XT1 is considered to be absent in this example.
-//  ACLK = default REFO ~32768Hz, MCLK = SMCLK = default DCODIV ~1MHz.
-//
-//           MSP430FR231x
-//         ---------------
-//     /|\|               |
-//      | |               |
-//      --|RST            |
-//        |           P1.0|-->LED
-//
-//   Darren Lu
-//   Texas Instruments Inc.
-//   July 2015
-//   Built with IAR Embedded Workbench v6.30 & Code Composer Studio v6.1 
-//******************************************************************************
+i#include "intrinsics.h"
+#include "msp430fr2355.h"
 #include <msp430.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-int main(void)
+#define SLAVE_ADDRESS 0x45
+
+void set_DB0(int);
+void set_DB1(int);
+void set_DB2(int);
+void set_DB3(int);
+void set_DB4(int);
+void set_DB5(int);
+void set_DB6(int);
+void set_DB7(int);
+void set_all_DB(int, int, int, int, int, int, int, int);
+
+void set_enable(int);
+void set_RW(int);
+void set_RS(int);
+void enable_HTL();
+void enable_LTH();
+void read_data();
+void move_cursor_right(int);
+void move_cursor_left(int);
+void return_home();
+void clear_display();
+
+void display_last_key();
+void display_pattern_0();
+void display_pattern_1();
+void display_pattern_2();
+void display_pattern_3();
+void display_pattern_4();
+void display_pattern_5();
+void display_pattern_6();
+void display_pattern_6();
+void display_pattern_7();
+
+void load_1();
+void load_2();
+void load_3();
+void load_4();
+void load_5();
+void load_6();
+void load_7();
+void load_8();
+void load_9();
+void load_0();
+void load_A();
+void load_B();
+void load_C();
+void load_D();
+void load_Star();
+void load_Pound();
+
+void load_a();
+void load_c();
+void load_d();
+void load_E();
+void load_F();
+void load_G();
+void load_H();
+void load_I();
+void load_L();
+void load_N();
+void load_O();
+void load_P();
+void load_R();
+void load_S();
+void load_T();
+void load_U();
+void load_W();
+void load_Space();
+
+volatile unsigned char data[2];
+int index = 0;
+int pattern_num = -1;
+int i;
+
+int main()
 {
-    WDTCTL = WDTPW | WDTHOLD;               // Stop watchdog timer
 
-    P1OUT &= ~BIT0;                         // Clear P1.0 output latch for a defined power-on state
-    P1DIR |= BIT0;                          // Set P1.0 to output direction
+    WDTCTL = WDTPW | WDTHOLD;
 
-    PM5CTL0 &= ~LOCKLPM5;                   // Disable the GPIO power-on default high-impedance mode
-                                            // to activate previously configured port settings
+    UCB0CTLW0 |= UCSWRST;
 
-    while(1)
+    P1SEL1 &= ~BIT3;
+    P1SEL0 |= BIT3;
+    P1SEL1 &= ~BIT2;
+    P1SEL0 |= BIT2;
+
+    UCB0CTLW0 &= ~UCTR;
+    UCB0CTLW0 &= ~UCMST;
+    UCB0CTLW0 |= UCMODE_3 | UCSYNC;
+
+    UCB0I2COA0 = SLAVE_ADDRESS | UCOAEN;
+    UCB0I2COA0 |= UCGCEN;
+
+    UCB0CTLW0 &= ~UCSWRST;
+
+    PM5CTL0 &= ~LOCKLPM5;
+
+    UCB0IE |= UCRXIE0;
+    __enable_interrupt();
+
+    P5DIR |= BIT4;      // Set DB7 as output
+    P1DIR |= BIT1;      // Set DB6 as output
+    P1DIR |= BIT5;      // Set DB5 as output
+    P1DIR |= BIT6;      // Set DB4 as output
+    P1DIR |= BIT7;      // Set DB3 as output
+    P3DIR |= BIT6;      // Set DB2 as output
+    P5DIR |= BIT2;      // Set DB1 as output
+    P4DIR |= BIT5;      // Set DB0 as output
+    P3DIR |= BIT4;      // Set ENABLE as output
+    P3DIR |= BIT5;      // Set RW as output
+    P3DIR |= BIT1;      // Set RS as output
+
+    // Set 8-bit mode
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 0, 1, 1, 1, 0, 0);
+    __delay_cycles(2000);
+
+    // Turn on display, cursor off, not blinking
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 1, 1, 0, 0, 0, 0);
+    __delay_cycles(2000);
+
+    // Clear all characters and reset DDRAM address to 0
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 0, 0, 0, 0, 0, 0, 0);
+    __delay_cycles(2000);
+
+    // Set cursor to move right, no display shift
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 1, 1, 0, 0, 0, 0, 0);
+    __delay_cycles(2000);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    while(true)
     {
-        P1OUT ^= BIT0;                      // Toggle P1.0 using exclusive-OR
-        __delay_cycles(100000);             // Delay for 100000*(1/MCLK)=0.1s
+        if(pattern_num == 0)
+	{
+            display_pattern_0();
+        }
+	else if(pattern_num == 1)
+	{
+            display_pattern_1();
+        }
+	else if(pattern_num == 2)
+	{
+            display_pattern_2();
+        }
+	else if(pattern_num == 3)
+	{
+            display_pattern_3();
+        }
+	else if(pattern_num == 4)
+	{
+            display_pattern_4();
+        }
+	else if(pattern_num == 5)
+	{
+            display_pattern_5();
+        }
+	else if(pattern_num == 6)
+	{
+            display_pattern_6();
+        }
+	else if(pattern_num == 7)
+	{
+            display_pattern_7();
+        }
     }
+}
+
+void set_DB0(int bit)
+{
+    if (bit)
+    {
+	P4OUT |= BIT5;
+    }
+    else
+    {
+	P4OUT &= ~BIT5;
+    }
+}
+
+void set_DB1(int bit)
+{
+    if (bit)
+    {
+	P5OUT |= BIT2;
+    }
+    else
+    {
+	P5OUT &= ~BIT2;
+    }
+}
+
+void set_DB2(int bit)
+{
+    if (bit)
+    {
+	P3OUT |= BIT6;
+    }
+    else
+    {
+	P3OUT &= ~BIT6;
+    }
+}
+
+void set_DB3(int bit)
+{
+    if (bit)
+    {
+	P1OUT |= BIT7;
+    }
+    else
+    {
+	P1OUT &= ~BIT7;
+    }
+}
+
+void set_DB4(int bit)
+{
+    if (bit)
+    {
+	P1OUT |= BIT6;
+    }
+    else
+    {
+	P1OUT &= ~BIT6;
+    }
+}
+
+void set_DB5(int bit)
+{
+    if (bit)
+    {
+	P1OUT |= BIT5;
+    }
+    else
+    {
+	P1OUT &= ~BIT5;
+    }
+}
+
+void set_DB6(int bit)
+{
+    if (bit)
+    {
+	P1OUT |= BIT1;
+    }
+    else
+    {
+	P1OUT &= ~BIT1;
+    ]
+}
+
+void set_DB7(int bit)
+{
+    if (bit)
+    {
+	P5OUT |= BIT4;
+    }
+    else
+    {
+	P5OUT &= ~BIT4;
+    }
+}
+
+void set_all_DB(int bit0, int bit1, int bit2, int bit3, int bit4, int bit5, int bit6, int bit7)
+{
+    set_DB0(bit0);
+    set_DB1(bit1);
+    set_DB2(bit2);
+    set_DB3(bit3);
+    set_DB4(bit4);
+    set_DB5(bit5);
+    set_DB6(bit6);
+    set_DB7(bit7);
+}
+
+void set_enable(int bit)
+{
+    if (bit)
+    {
+	P3OUT |= BIT4;
+    }
+    else
+    {
+	P3OUT &= ~BIT4;
+    }
+}
+
+void set_RW(int bit)
+{
+    if (bit)
+    {
+	P3OUT |= BIT5;
+    }
+    else
+    {
+	P3OUT &= ~BIT5;
+    }
+}
+
+void set_RS(int bit)
+{
+    if (bit)
+    {
+	P3OUT |= BIT1;
+    }
+    else
+    {
+	P3OUT &= ~BIT1;
+    }
+}
+
+void enable_HTL()
+{
+    set_enable(1);
+    __delay_cycles(5);
+    set_enable(0);
+}
+
+void enable_LTH()
+{
+    set_enable(0);
+    __delay_cycles(5);
+    set_enable(1);
+}
+
+void read_data()
+{
+    set_RS(1);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 0, 0, 1, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+void move_cursor_right(int num_times)
+{
+    for(i = 0; i < num_times; i++)
+    {
+        set_RS(0);
+        set_RW(0);
+        enable_HTL();
+        set_all_DB(0, 0, 1, 0, 1, 0, 0, 0);
+        __delay_cycles(2000);
+    }
+}
+
+void move_cursor_left(int num_times)
+{
+    for(i = 0; i < num_times; i++)
+    {
+        set_RS(0);
+        set_RW(0);
+        enable_HTL();
+        set_all_DB(0, 0, 0, 0, 1, 0, 0, 0);
+        __delay_cycles(2000);
+    }
+}
+
+void return_home()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 1, 0, 0, 0, 0, 0, 0);
+    __delay_cycles(2000);
+}
+
+void clear_display()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 0, 0, 0, 0, 0, 0, 0);
+    __delay_cycles(2000);
+}
+
+void display_last_key()
+{
+    move_cursor_right(55);
+    load_A();
+    read_data();
+}
+
+void display_pattern_0()
+{
+    return_home();
+    clear_display();
+    load_S();
+    read_data();
+    load_T();
+    read_data();
+    load_a();
+    read_data();
+    load_T();
+    read_data();
+    load_I();
+    read_data();
+    load_c();
+    read_data();
+}
+
+void display_pattern_1()
+{
+    return_home();
+    clear_display();
+    load_T();
+    read_data();
+    load_O();
+    read_data();
+    load_G();
+    read_data();
+    load_G();
+    read_data();
+    load_L();
+    read_data();
+    load_E();
+    read_data();
+}
+
+void display_pattern_2()
+{
+    return_home();
+    clear_display();
+    load_U();
+    read_data();
+    load_P();
+    read_data();
+    load_Space();
+    read_data();
+    load_c();
+    read_data();
+    load_O();
+    read_data();
+    load_U();
+    read_data();
+    load_N();
+    read_data();
+    load_T();
+    read_data();
+    load_E();
+    read_data();
+    load_R();
+    read_data();
+}
+
+void display_pattern_3()
+{
+    return_home();
+    clear_display();
+    load_I();
+    read_data();
+    load_N();
+    read_data();
+    load_Space();
+    read_data();
+    load_a();
+    read_data();
+    load_N();
+    read_data();
+    load_d();
+    read_data();
+    load_Space();
+    read_data();
+    load_O();
+    read_data();
+    load_U();
+    read_data();
+    load_T();
+    read_data();
+}
+
+void display_pattern_4()
+{
+    return_home();
+    clear_display();
+    load_d();
+    read_data();
+    load_O();
+    read_data();
+    load_W();
+    read_data();
+    load_N();
+    read_data();
+    load_Space();
+    read_data();
+    load_c();
+    read_data();
+    load_O();
+    read_data();
+    load_U();
+    read_data();
+    load_N();
+    read_data();
+    load_T();
+    read_data();
+    load_E();
+    read_data();
+    load_R();
+    read_data();
+}
+
+void display_pattern_5()
+{
+    return_home();
+    clear_display();
+    load_R();
+    read_data();
+    load_O();
+    read_data();
+    load_T();
+    read_data();
+    load_a();
+    read_data();
+    load_T();
+    read_data();
+    load_E();
+    read_data();
+    load_Space();
+    read_data();
+    load_1();
+    read_data();
+    load_Space();
+    read_data();
+    load_L();
+    read_data();
+    load_E();
+    read_data();
+    load_F();
+    read_data();
+    load_T();
+    read_data();
+}
+
+void display_pattern_6()
+{
+    return_home();
+    clear_display();
+    load_R();
+    read_data();
+    load_O();
+    read_data();
+    load_T();
+    read_data();
+    load_a();
+    read_data();
+    load_T();
+    read_data();
+    load_E();
+    read_data();
+    load_Space();
+    read_data();
+    load_7();
+    read_data();
+    load_Space();
+    read_data();
+    load_R();
+    read_data();
+    load_I();
+    read_data();
+    load_G();
+    read_data();
+    load_H();
+    read_data();
+    load_T();
+    read_data();
+}
+
+void display_pattern_7()
+{
+    return_home();
+    clear_display();
+    load_F();
+    read_data();
+    load_I();
+    read_data();
+    load_L();
+    read_data();
+    load_L();
+    read_data();
+    load_Space();
+    read_data();
+    load_L();
+    read_data();
+    load_E();
+    read_data();
+    load_F();
+    read_data();
+    load_T();
+    read_data();
+}
+
+//////////////////////////////////////////////////////////////////
+
+void load_1()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 0, 0, 0, 1, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+void load_2()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 1, 0, 0, 1, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+void load_3()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 1, 0, 0, 1, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+void load_4()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 1, 0, 1, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+void load_5()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 0, 1, 0, 1, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+void load_6()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 1, 1, 0, 1, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+void load_7()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 1, 1, 0, 1, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+void load_8()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 0, 1, 1, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+void load_9()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 0, 0, 1, 1, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+void load_0()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 0, 0, 1, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+void load_A()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 0, 0, 0, 0, 0, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_B()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 1, 0, 0, 0, 0, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_C()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 1, 0, 0, 0, 0, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_D()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 1, 0, 0, 0, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_Star()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 1, 0, 1, 0, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+void load_Pound()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 1, 0, 0, 0, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+////////////////////////////////////////////////////////////
+
+void load_a()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 0, 0, 0, 0, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_c()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 1, 0, 0, 0, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_d()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 1, 0, 0, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_E()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 0, 1, 0, 0, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_F()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 1, 1, 0, 0, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_G()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 1, 1, 0, 0, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_H()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 0, 1, 0, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_I()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 0, 0, 1, 0, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_L()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 1, 1, 0, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_N()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 1, 1, 1, 0, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_O()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 1, 1, 1, 0, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_P()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 0, 0, 1, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_R()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 1, 0, 0, 1, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_S()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 1, 0, 0, 1, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_T()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 1, 0, 1, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_U()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 0, 1, 0, 1, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_W()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 1, 1, 0, 1, 1, 1, 0);
+    __delay_cycles(2000);
+}
+
+void load_Space()
+{
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 0, 0, 0, 1, 0, 0);
+    __delay_cycles(2000);
+}
+
+#pragma vector=EUSCI_B0_VECTOR
+__interrupt void EUSCI_B0_ISR()
+{
+    if(index == 2)
+    {
+        index = 0;
+    }
+    data[index] = UCB0RXBUF;
+    pattern_num = data[0];
+    index++;
+    UCB0IFG &= ~UCRXIFG;
 }

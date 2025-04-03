@@ -80,6 +80,111 @@ int index = 0;
 int pattern_num = -1;
 int i;
 
+int main()
+{
+
+    WDTCTL = WDTPW | WDTHOLD;
+
+    UCB0CTLW0 |= UCSWRST;
+
+    P1SEL1 &= ~BIT3;
+    P1SEL0 |= BIT3;
+    P1SEL1 &= ~BIT2;
+    P1SEL0 |= BIT2;
+
+    UCB0CTLW0 &= ~UCTR;
+    UCB0CTLW0 &= ~UCMST;
+    UCB0CTLW0 |= UCMODE_3 | UCSYNC;
+
+    UCB0I2COA0 = SLAVE_ADDRESS | UCOAEN;
+    UCB0I2COA0 |= UCGCEN;
+
+    UCB0CTLW0 &= ~UCSWRST;
+
+    PM5CTL0 &= ~LOCKLPM5;
+
+    UCB0IE |= UCRXIE0;
+    __enable_interrupt();
+
+    P5DIR |= BIT4;      // Set DB7 as output
+    P1DIR |= BIT1;      // Set DB6 as output
+    P1DIR |= BIT5;      // Set DB5 as output
+    P1DIR |= BIT6;      // Set DB4 as output
+    P1DIR |= BIT7;      // Set DB3 as output
+    P3DIR |= BIT6;      // Set DB2 as output
+    P5DIR |= BIT2;      // Set DB1 as output
+    P4DIR |= BIT5;      // Set DB0 as output
+    P3DIR |= BIT4;      // Set ENABLE as output
+    P3DIR |= BIT5;      // Set RW as output
+    P3DIR |= BIT1;      // Set RS as output
+
+    // Set 8-bit mode
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 0, 1, 1, 1, 0, 0);
+    __delay_cycles(2000);
+
+    // Turn on display, cursor off, not blinking
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 0, 1, 1, 0, 0, 0, 0);
+    __delay_cycles(2000);
+
+    // Clear all characters and reset DDRAM address to 0
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(1, 0, 0, 0, 0, 0, 0, 0);
+    __delay_cycles(2000);
+
+    // Set cursor to move right, no display shift
+    set_RS(0);
+    set_RW(0);
+    enable_HTL();
+    set_all_DB(0, 1, 1, 0, 0, 0, 0, 0);
+    __delay_cycles(2000);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    while(true)
+    {
+        if(pattern_num == 0)
+	{
+            display_pattern_0();
+        }
+	else if(pattern_num == 1)
+	{
+            display_pattern_1();
+        }
+	else if(pattern_num == 2)
+	{
+            display_pattern_2();
+        }
+	else if(pattern_num == 3)
+	{
+            display_pattern_3();
+        }
+	else if(pattern_num == 4)
+	{
+            display_pattern_4();
+        }
+	else if(pattern_num == 5)
+	{
+            display_pattern_5();
+        }
+	else if(pattern_num == 6)
+	{
+            display_pattern_6();
+        }
+	else if(pattern_num == 7)
+	{
+            display_pattern_7();
+        }
+    }
+}
+
 void set_DB0(int bit)
 {
     if (bit)

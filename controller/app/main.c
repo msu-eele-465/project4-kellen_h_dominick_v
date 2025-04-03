@@ -23,7 +23,7 @@ unsigned char SLAVE_ADDRESS_1 = 0x45;
 unsigned char SLAVE_ADDRESS_2 = 0x46;
 volatile unsigned char data[2] = {0, 0};
 int BYTES = 2;
-int dataCnt = 0;
+int data_cnt = 0;
 int i;
 
 int main(void)
@@ -38,9 +38,9 @@ int main(void)
     __enable_interrupt();
 
     //Setup all devices
-    keypadSetup();
-    RGBLEDSetup();
-    heartbeatSetup();
+    keypad_setup();
+    RGB_LED_setup();
+    heartbeat_setup();
 
     P4DIR |= BIT7;
     P2DIR |= BIT4;
@@ -58,7 +58,7 @@ int main(void)
     char unlock_code[4] = {'1', '2', '3', '4'};
     bool locked = true;
     unsigned int counter = 0;
-    volatile unsigned char baseTransitionPeriod = 4;
+    volatile unsigned char base_transition_period = 4;
     int step = 0;
     int j;
 
@@ -66,13 +66,13 @@ int main(void)
     while (true)
     {
         //Set LED to red to start
-        redLED();
+        red_LED();
         while (locked)
         {
             //If a key has been pressed, set LED to yellow
             if(input_arr[0] != 'e')
 	    {
-		yellowLED();
+		yellow_LED();
             }
             for (i = 0; i < 4; i++)
             {
@@ -83,22 +83,22 @@ int main(void)
             if ((P3IN & BIT7) == 0)
             {
                 input_arr[counter] = '1';
-                keyReleased(&P3IN, BIT7);
+                key_released(&P3IN, BIT7);
             }
             else if ((P1IN & BIT4) == 0)
             {
                 input_arr[counter] = '2';
-                keyReleased(&P1IN, BIT4);
+                key_released(&P1IN, BIT4);
             }
             else if ((P1IN & BIT5) == 0)
             {
                 input_arr[counter] = '3';
-                keyReleased(&P1IN, BIT5);
+                key_released(&P1IN, BIT5);
             }
             else if ((P1IN & BIT6) == 0)
             {
                 input_arr[counter] = 'A';
-                keyReleased(&P1IN, BIT6);
+                key_released(&P1IN, BIT6);
             }
             //poll row 2
             P5OUT |= BIT4;
@@ -106,22 +106,22 @@ int main(void)
             if ((P3IN & BIT7) == 0)
             {
                 input_arr[counter] = '4';
-                keyReleased(&P3IN, BIT7);
+                key_released(&P3IN, BIT7);
             }
             else if ((P1IN & BIT4) == 0)
             {
                 input_arr[counter] = '5';
-                keyReleased(&P1IN, BIT4);
+                key_released(&P1IN, BIT4);
             }
             else if ((P1IN & BIT5) == 0)
             {
                 input_arr[counter] = '6';
-                keyReleased(&P1IN, BIT5);
+                key_released(&P1IN, BIT5);
             }
             else if ((P1IN & BIT6) == 0)
             {
                 input_arr[counter] = 'B';
-                keyReleased(&P1IN, BIT6);
+                key_released(&P1IN, BIT6);
             }
             //poll row 3
             P3OUT |= BIT4;
@@ -129,22 +129,22 @@ int main(void)
             if ((P3IN & BIT7) == 0)
             {
                 input_arr[counter] = '7';
-                keyReleased(&P3IN, BIT7);
+                key_released(&P3IN, BIT7);
             }
             else if ((P1IN & BIT4) == 0)
             {
                 input_arr[counter] = '8';
-                keyReleased(&P1IN, BIT4);
+                key_released(&P1IN, BIT4);
             }
             else if ((P1IN & BIT5) == 0)
             {
                 input_arr[counter] = '9';
-                keyReleased(&P1IN, BIT5);
+                key_released(&P1IN, BIT5);
             }
             else if ((P1IN & BIT6) == 0)
             {
                 input_arr[counter] = 'C';
-                keyReleased(&P1IN, BIT6);
+                key_released(&P1IN, BIT6);
             }
             //poll row 4
             P3OUT |= BIT5;
@@ -152,22 +152,22 @@ int main(void)
             if ((P3IN & BIT7) == 0)
             {
                 input_arr[counter] = '*';
-                keyReleased(&P3IN, BIT7);
+                key_released(&P3IN, BIT7);
             }
             else if ((P1IN & BIT4) == 0)
             {
                 input_arr[counter] = '0';
-                keyReleased(&P1IN, BIT4);
+                key_released(&P1IN, BIT4);
             }
             else if ((P1IN & BIT5) == 0)
             {
                 input_arr[counter] = '#';
-                keyReleased(&P1IN, BIT5);
+                key_released(&P1IN, BIT5);
             }
             else if ((P1IN & BIT6) == 0)
             {
                 input_arr[counter] = 'D';
-                keyReleased(&P1IN, BIT6);
+                key_released(&P1IN, BIT6);
             }
             P3OUT |= BIT6;
 
@@ -184,7 +184,7 @@ int main(void)
                         {
                             input_arr[j] = 'e';
                         }
-                        redLED();
+                        red_LED();
                         break;
                     }
                     correct++;
@@ -201,7 +201,7 @@ int main(void)
         }
 
         //If unlock code was entered, set LED to green
-        greenLED();
+        green_LED();
 
         //Loop checking for pattern code
         while (true)
@@ -211,9 +211,10 @@ int main(void)
             if ((P3IN & BIT7) == 0)
             {
                 data[0] = 1;
-                data[1] = baseTransitionPeriod;
-                keyReleased(&P3IN, BIT7);
-                write_to_slave(slave_address_2, data);
+                data[1] = base_transition_period;
+                key_released(&P3IN, BIT7);
+                write_to_slave(SLAVE_ADDRESS_2, data);
+		write_to_slave(SLAVE_ADDRESS_1, data);
                 P4OUT |= BIT7;
                 P2OUT &= ~BIT4;
                 P2OUT &= ~BIT5;
@@ -222,9 +223,10 @@ int main(void)
             else if ((P1IN & BIT4) == 0)
             {
                 data[0] = 2;
-                data[1] = baseTransitionPeriod;
-                keyReleased(&P1IN, BIT4);
-                write_to_slave(slave_address_2, data);
+                data[1] = base_transition_period;
+                key_released(&P1IN, BIT4);
+                write_to_slave(SLAVE_ADDRESS_2, data);
+		write_to_slave(SLAVE_ADDRESS_1, data);
                 P4OUT &= ~BIT7;
                 P2OUT |= BIT4;
                 P2OUT &= ~BIT5;
@@ -233,9 +235,10 @@ int main(void)
             else if ((P1IN & BIT5) == 0)
             {
                 data[0] = 3;
-                data[1] = baseTransitionPeriod;
-                keyReleased(&P1IN, BIT5);
-                write_to_slave(slave_address_2, data);
+                data[1] = base_transition_period;
+                key_released(&P1IN, BIT5);
+                write_to_slave(SLAVE_ADDRESS_2, data);
+		write_to_slave(SLAVE_ADDRESS_1, data);
                 P4OUT |= BIT7;
                 P2OUT |= BIT4;
                 P2OUT &= ~BIT5;
@@ -243,13 +246,14 @@ int main(void)
             }
             else if ((P1IN & BIT6) == 0)
             {
-                keyReleased(&P1IN, BIT6);
-                if (baseTransitionPeriod > 1)
+                key_released(&P1IN, BIT6);
+                if (base_transition_period > 1)
                 {
-                    baseTransitionPeriod -= 1;
-                    data[1] = baseTransitionPeriod;
+                    base_transition_period -= 1;
+                    data[1] = base_transition_period;
                     data[0] = 8;
-                    write_to_slave(slave_address_2, data);
+                    write_to_slave(SLAVE_ADDRESS_2, data);
+		    write_to_slave(SLAVE_ADDRESS_1, data);
                 }
             }
             P5OUT |= BIT4;
@@ -257,13 +261,14 @@ int main(void)
             P3OUT &= ~BIT4;
             if ((P1IN & BIT6) == 0)
             {
-                keyReleased(&P1IN, BIT6);
-                if (baseTransitionPeriod < 8)
+                key_released(&P1IN, BIT6);
+                if (base_transition_period < 8)
                 {
-                    baseTransitionPeriod += 1;
-                    data[1] = baseTransitionPeriod;
+                    base_transition_period += 1;
+                    data[1] = base_transition_period;
                     data[0] = 8;
-                    write_to_slave(slave_address_2, data);
+                    write_to_slave(SLAVE_ADDRESS_2, data);
+		    write_to_slave(SLAVE_ADDRESS_1, data);
                 }
             }
             P3OUT |= BIT4;
@@ -272,9 +277,10 @@ int main(void)
             if ((P1IN & BIT4) == 0)
             {
                 data[0] = 0;
-                data[1] = baseTransitionPeriod;
-                keyReleased(&P1IN, BIT4);
-                write_to_slave(slave_address_2, data);
+                data[1] = base_transition_period;
+                key_released(&P1IN, BIT4);
+                write_to_slave(SLAVE_ADDRESS_2, data);
+                write_to_slave(SLAVE_ADDRESS_1, data);
                 P4OUT &= ~BIT7;
                 P2OUT |= BIT4;
                 P2OUT |= BIT5;
@@ -310,7 +316,7 @@ void write_to_slave(unsigned char slave_address, volatile unsigned char data[])
 {
     UCB0I2CSA = slave_address;
     UCB0CTLW0 |= UCTR;
-    UCB0TBCNT = bytes;
+    UCB0TBCNT = BYTES;
     UCB0IE |= UCTXIE0;
     UCB0CTLW0 |= UCTXSTT;
     for (i = 0; i < 200; i++)
@@ -322,7 +328,7 @@ void write_to_slave(unsigned char slave_address, volatile unsigned char data[])
 }
 
 //Setup function for keypad
-void keypadSetup()
+void keypad_setup()
 {
 
     P1DIR &= ~BIT6;         // all columns set as inputs
@@ -351,7 +357,7 @@ void keypadSetup()
 }
 
 //Setup function for hearbeat LED
-void heartbeatSetup()
+void heartbeat_setup()
 {
     P6DIR |= BIT6;
     P6OUT &= ~BIT6;
@@ -372,7 +378,7 @@ __interrupt void ISR_TB3_CCR0(void)
 }
 
 //Setup function for RGB LED
-void RGBLEDSetup()
+void RGB_LED_Setup()
 {
     P5DIR |= BIT3 | BIT1 | BIT0;   // Set red, green, and blue pins to outputs
 
@@ -451,7 +457,7 @@ __interrupt void ISR_TB2_CCR1(void)
 }
 
 //Checks if two char arrays are equal
-bool arraysEqual(char arr1[], char arr2[])
+bool arrays_equal(char arr1[], char arr2[])
 {
     int i;
     for (i = 0; i < 4; i++) {
@@ -464,32 +470,32 @@ bool arraysEqual(char arr1[], char arr2[])
 }
 
 //Check if key has been unpressed
-void keyReleased(volatile unsigned char* pin, unsigned char bit)
+void key_released(volatile unsigned char* pin, unsigned char bit)
 {
     while ((*pin & bit) == 0) {}
     return;
 }
 
 //Sets red
-void redLED()
+void red_LED()
 {
-    colorChange(0, 254, 254);
+    color_change(0, 254, 254);
 }
 
 //Sets yellow
-void yellowLED()
+void yellow_LED()
 {
-    colorChange(0, 0, 254);
+    color_change(0, 0, 254);
 }
 
 //Sets blue
-void greenLED()
+void green_LED()
 {
-    colorChange(254, 0, 254);
+    color_change(254, 0, 254);
 }
 
 //Sets CCR1 for timers B0,1,2 to reflect correct color
-void colorChange(int red, int green, int blue)
+void color_change(int red, int green, int blue)
 {
     TB0CCR1 = 254 - red;
     TB1CCR1 = 254 - green;
@@ -500,15 +506,14 @@ void colorChange(int red, int green, int blue)
 #pragma vector=EUSCI_B0_VECTOR
 __interrupt void EUSCI_B0_I2C_ISR(void)
 {
-    if (dataCnt == bytes - 1)
+    if (data_cnt == BYTES - 1)
     {
-        UCB0TXBUF = data[dataCnt];
-
-        dataCnt = 0;
+        UCB0TXBUF = data[data_cnt];
+        data_cnt = 0;
     }
     else
     {
-        UCB0TXBUF = data[dataCnt];
-        dataCnt++;
+        UCB0TXBUF = data[data_cnt];
+        data_cnt++;
     }
 }

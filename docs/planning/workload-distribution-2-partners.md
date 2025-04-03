@@ -11,7 +11,7 @@ You will fill out this form:
 | Requirement/specification                                                                                | Points | Partner 1 | Partner 2 |
 |----------------------------------------------------------------------------------------------------------|--------|-----------|-----------|
 | **Presentation**                                                                                         |        |           |           |
-| Introduction                                                                                             | 1      |           |           |
+| Introduction                                                                                             | 1      |  Kellen/Dominick         |           |
 | Circuit diagram                                                                                          | 2      |           |           |
 | System architecture diagram                                                                              | 2      |           |           |
 | Controller high-level flowchart                                                                          | 1      |           |           |

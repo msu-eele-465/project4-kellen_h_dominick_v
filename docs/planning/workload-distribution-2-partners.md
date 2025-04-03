@@ -11,40 +11,40 @@ You will fill out this form:
 | Requirement/specification                                                                                | Points | Partner 1 | Partner 2 |
 |----------------------------------------------------------------------------------------------------------|--------|-----------|-----------|
 | **Presentation**                                                                                         |        |           |           |
-| Introduction                                                                                             | 1      |  Kellen/Dominick         |           |
-| Circuit diagram                                                                                          | 2      |           |           |
-| System architecture diagram                                                                              | 2      |           |           |
-| Controller high-level flowchart                                                                          | 1      |           |           |
-| LED peripheral high-level flowchart                                                                      | 1      |           |           |
-| LCD peripheral high-level flowchart                                                                      | 1      |           |           |
-| Professional demo                                                                                        | 2      |           |           |
+| Introduction                                                                                             | 1      |  Kellen         |  Dominick         |
+| Circuit diagram                                                                                          | 2      |  Kellen         |           |
+| System architecture diagram                                                                              | 2      |           |    Dominick       |
+| Controller high-level flowchart                                                                          | 1      | Kellen          |   Dominick        |
+| LED peripheral high-level flowchart                                                                      | 1      |  Kellen         |   Dominick        |
+| LCD peripheral high-level flowchart                                                                      | 1      |   Kellen        |   Dominick        |
+| Professional demo                                                                                        | 2      | Kellen          |   Dominick        |
 | **LED Patterns**                                                                                         |        |           |           |
-| LED patterns work correctly                                                                              | 1      |           |           |
-| **LCD Display**                                                                                          |        |           |           |
-| LCD is blank when the system is locked                                                                   | 0.5    |           |           |
-| LCD displays current keypress when unlocked                                                              | 1      |           |           |
-| LCD displays  LED pattern name                                                                           | 2      |           |           |
-| Pressing “C” toggles the cursor state (on or off)                                                        | 1      |           |           |
-| Pressing “9” toggles the cursor’s blink state (blinking or not blinking)                                 | 1      |           |           |
+| LED patterns work correctly                                                                              | 1      |  Kellen         |   Dominick        |
+| **LCD Display**                                                                                          |        |  Kellen         |  Dominick         |
+| LCD is blank when the system is locked                                                                   | 0.5    |  Kellen         |    Dominick       |
+| LCD displays current keypress when unlocked                                                              | 1      |   Kellen        |    Dominick       |
+| LCD displays  LED pattern name                                                                           | 2      |   Kellen        |    Dominick       |
+| Pressing “C” toggles the cursor state (on or off)                                                        | 1      |  Kellen         |   Dominick        |
+| Pressing “9” toggles the cursor’s blink state (blinking or not blinking)                                 | 1      |   Kellen        |   Dominick        |
 | **Main controller**                                                                                      |        |           |           |
-| System must have a status indicator that indicates whether system is locked, being unlocked, or unlocked | 0.5    |           |           |
-| The system should respond quickly to a key press                                                         | 1      |           |           |
-| The system must communicate to the LED peripheral when a pattern button is pressed                       | 2      |           |           |
-| The system must communicate to the LCD peripheral when any key is pressed                                | 2      |           |           |
+| System must have a status indicator that indicates whether system is locked, being unlocked, or unlocked | 0.5    |  Kellen         |   Dominick        |
+| The system should respond quickly to a key press                                                         | 1      |   Kellen        |   Dominick        |
+| The system must communicate to the LED peripheral when a pattern button is pressed                       | 2      |  Kellen          |  Dominick         |
+| The system must communicate to the LCD peripheral when any key is pressed                                | 2      |  Kellen         |    Dominick       |
 | **LED bar peripheral**                                                                                   |        |           |           |
-| Status indicator must indicate when the system has received data                                         | 0.25   |           |           |
-| Status indicator must indicate when the system has not received data for some time                       | 0.25   |           |           |
-| System must be controlled via i2c                                                                        | 2      |           |           |
+| Status indicator must indicate when the system has received data                                         | 0.25   |  Kellen         |   Dominick        |
+| Status indicator must indicate when the system has not received data for some time                       | 0.25   |   Kellen        |    Dominick       |
+| System must be controlled via i2c                                                                        | 2      |   Kellen        |    Dominick       |
 | **LCD peripheral**                                                                                       |        |           |           |
-| Status indicator must indicate when the system has received data                                         | 0.25   |           |           |
-| Status indicator must indicate when the system has not received data for some time                       | 0.25   |           |           |
-| System must be controlled via i2c                                                                        | 2      |           |           |
-| System must be able to write characters to all 32 segments                                               | 4      |           |           |
-| System must be able to write all characters between 00100011 and 01111111 in the Character Font Table    | 4      |           |           |
-| LCD contrast is adjustable                                                                               | 2      |           |           |
-| LCD must be able to be cleared                                                                           | 1      |           |           |
-| LCD cursor can be turned off and on                                                                      | 1      |           |           |
-| LCD cursor’s blink functionality can be turned off and on                                                | 1      |           |           |
+| Status indicator must indicate when the system has received data                                         | 0.25   |   Kellen        |   Dominick        |
+| Status indicator must indicate when the system has not received data for some time                       | 0.25   |  Kellen         |   Dominick        |
+| System must be controlled via i2c                                                                        | 2      |  Kellen         |     Dominick      |
+| System must be able to write characters to all 32 segments                                               | 4      |  Kellen         |    Dominick       |
+| System must be able to write all characters between 00100011 and 01111111 in the Character Font Table    | 4      |  Kellen         |  Dominick         |
+| LCD contrast is adjustable                                                                               | 2      |  Kellen         |   Dominick        |
+| LCD must be able to be cleared                                                                           | 1      |  Kellen         |   Dominick        |
+| LCD cursor can be turned off and on                                                                      | 1      |  Kellen         |  Dominick         |
+| LCD cursor’s blink functionality can be turned off and on                                                | 1      |   Kellen        |   Dominick        |
 | Total                                                                                                    | 40     |           |           |
 
 
